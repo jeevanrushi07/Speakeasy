@@ -1,4 +1,5 @@
 # Speakeasy: Fullstack Chat & Video Calling Platform
+---
 
 ## 📚 Project Overview
 Speakeasy is a fullstack real-time chat and video calling platform designed for language exchange and social connection. It features:
@@ -13,7 +14,6 @@ Speakeasy is a fullstack real-time chat and video calling platform designed for 
 - 🚨 Robust error handling (frontend & backend)
 - 🚀 Ready for free deployment
 
----
 
 ---
 
