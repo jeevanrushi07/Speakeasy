@@ -50,6 +50,8 @@ export async function signup(req, res) {
       expiresIn: "7d",
     });
 
+    console.log("Setting JWT cookie for signup:", token.substring(0, 20) + "...");
+    
     res.cookie("jwt", token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true, // prevent XSS attacks,
@@ -58,6 +60,7 @@ export async function signup(req, res) {
       domain: undefined, // let browser set the domain
     });
 
+    console.log("Cookie set successfully");
     res.status(201).json({ success: true, user: newUser });
   } catch (error) {
     console.log("Error in signup controller", error);
@@ -83,6 +86,8 @@ export async function login(req, res) {
       expiresIn: "7d",
     });
 
+    console.log("Setting JWT cookie for login:", token.substring(0, 20) + "...");
+    
     res.cookie("jwt", token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true, // prevent XSS attacks,
@@ -91,6 +96,7 @@ export async function login(req, res) {
       domain: undefined, // let browser set the domain
     });
 
+    console.log("Login cookie set successfully");
     res.status(200).json({ success: true, user });
   } catch (error) {
     console.log("Error in login controller", error.message);
