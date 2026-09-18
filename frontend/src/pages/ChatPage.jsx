@@ -27,10 +27,14 @@ const ChatPage = () => {
   const [chatClient, setChatClient] = useState(null);
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [chatError, setChatError] = useState("");
 
   const { authUser } = useAuthUser();
 
-  const { data: tokenData } = useQuery({
+  const {
+    data: tokenData,
+    error: tokenError,
+  } = useQuery({
     queryKey: ["streamToken"],
     queryFn: getStreamToken,
     enabled: !!authUser, // this will run only when authUser is available
@@ -38,7 +42,24 @@ const ChatPage = () => {
 
   useEffect(() => {
     const initChat = async () => {
-      if (!tokenData?.token || !authUser) return;
+      if (!authUser) {
+        setLoading(false);
+        return;
+      }
+
+      if (tokenError) {
+        setChatError(tokenError.response?.data?.message || "Could not get a chat token.");
+        setLoading(false);
+        return;
+      }
+
+      if (!tokenData?.token) return;
+
+      if (!STREAM_API_KEY) {
+        setChatError("Stream chat is not configured. Add VITE_STREAM_API_KEY in Render and redeploy.");
+        setLoading(false);
+        return;
+      }
 
       try {
         console.log("Initializing stream chat client...");
@@ -71,6 +92,7 @@ const ChatPage = () => {
         setChannel(currChannel);
       } catch (error) {
         console.error("Error initializing chat:", error);
+        setChatError(error.message || "Could not connect to chat.");
         toast.error("Could not connect to chat. Please try again.");
       } finally {
         setLoading(false);
@@ -78,7 +100,7 @@ const ChatPage = () => {
     };
 
     initChat();
-  }, [tokenData, authUser, targetUserId]);
+  }, [tokenData, tokenError, authUser, targetUserId]);
 
   const handleVideoCall = () => {
     if (channel) {
@@ -92,7 +114,17 @@ const ChatPage = () => {
     }
   };
 
-  if (loading || !chatClient || !channel) return <ChatLoader />;
+  if (loading || !chatClient || !channel) {
+    if (chatError) {
+      return (
+        <div className="h-screen flex flex-col items-center justify-center p-4 text-center">
+          <p className="text-lg font-semibold">Unable to open chat</p>
+          <p className="mt-2 opacity-70">{chatError}</p>
+        </div>
+      );
+    }
+    return <ChatLoader />;
+  }
 
   return (
     <div className="h-[93vh]">
