@@ -3,6 +3,7 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -13,7 +14,9 @@ import { connectDB } from "./lib/db.js";
 const app = express();
 const PORT = process.env.PORT || 443;
 
-const __dirname = path.resolve();
+const currentFile = fileURLToPath(import.meta.url);
+const backendSourceDirectory = path.dirname(currentFile);
+const frontendDistDirectory = path.resolve(backendSourceDirectory, "../../frontend/dist");
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
@@ -60,13 +63,11 @@ app.get("/api/test", (req, res) => {
 });
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+app.use(express.static(frontendDistDirectory));
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(frontendDistDirectory, "index.html"));
   });
 }
 
