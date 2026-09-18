@@ -52,7 +52,7 @@ const Sidebar = () => {
           <span>Notifications</span>
           {totalUnread > 0 && (
             <span
-              className="absolute left-8 top-2 size-2 rounded-full bg-success ring-2 ring-base-200"
+              className="absolute left-8 top-2 size-2 rounded-full bg-error ring-2 ring-base-200"
               title="New message"
             />
           )}
