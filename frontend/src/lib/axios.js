@@ -8,4 +8,5 @@ const getBaseURL = () => {
 export const axiosInstance = axios.create({
   baseURL: getBaseURL(),
   withCredentials: true, // send cookies with the request
+  timeout: 15000,
 });
