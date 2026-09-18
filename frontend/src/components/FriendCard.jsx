@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { removeFriend } from "../lib/api";
 import { UserMinusIcon } from "lucide-react";
 
-const FriendCard = ({ friend }) => {
+const FriendCard = ({ friend, unreadCount = 0 }) => {
   const queryClient = useQueryClient();
   const { mutate: removeFriendMutation, isPending } = useMutation({
     mutationFn: removeFriend,
@@ -27,7 +27,14 @@ const FriendCard = ({ friend }) => {
               onError={(event) => handleAvatarError(event, friend.fullName)}
             />
           </div>
-          <h3 className="font-semibold truncate">{friend.fullName}</h3>
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="font-semibold truncate">{friend.fullName}</h3>
+            {unreadCount > 0 && (
+              <span className="badge badge-primary badge-sm shrink-0">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-3">

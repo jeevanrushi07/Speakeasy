@@ -14,10 +14,15 @@ import { capitialize, handleAvatarError } from "../lib/utils";
 
 import FriendCard, { getLanguageFlag } from "../components/FriendCard";
 import NoFriendsFound from "../components/NoFriendsFound";
+import useStreamUnread from "../hooks/useStreamUnread";
 
 const HomePage = () => {
   const queryClient = useQueryClient();
   const [outgoingRequestsIds, setOutgoingRequestsIds] = useState(new Set());
+  const { channels: unreadChannels } = useStreamUnread();
+  const unreadByUserId = new Map(
+    unreadChannels.map((channel) => [channel.targetUserId, channel.unread])
+  );
 
   const { data: friends = [], isLoading: loadingFriends } = useQuery({
     queryKey: ["friends"],
@@ -81,7 +86,11 @@ const HomePage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {friends.map((friend) => (
-              <FriendCard key={friend._id} friend={friend} />
+              <FriendCard
+                key={friend._id}
+                friend={friend}
+                unreadCount={unreadByUserId.get(friend._id) || 0}
+              />
             ))}
           </div>
         )}
@@ -113,6 +122,7 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
+                const unreadCount = unreadByUserId.get(user._id) || 0;
 
                 return (
                   <div
@@ -130,7 +140,14 @@ const HomePage = () => {
                         </div>
 
                         <div>
-                          <h3 className="font-semibold text-lg">{user.fullName}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">{user.fullName}</h3>
+                            {unreadCount > 0 && (
+                              <span className="badge badge-primary badge-sm">
+                                {unreadCount > 99 ? "99+" : unreadCount}
+                              </span>
+                            )}
+                          </div>
                           {user.location && (
                             <div className="flex items-center text-xs opacity-70 mt-1">
                               <MapPinIcon className="size-3 mr-1" />

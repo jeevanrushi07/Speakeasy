@@ -1,8 +1,6 @@
 import { Link, useLocation } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
 import {
-  BellIcon,
-  ClipboardListIcon,
   LogOutIcon,
   ShipWheelIcon,
   UserXIcon,
@@ -13,7 +11,6 @@ import { handleAvatarError } from "../lib/utils";
 import { deleteAccount } from "../lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import useStreamUnread from "../hooks/useStreamUnread";
 
 const Navbar = () => {
   const { authUser } = useAuthUser();
@@ -27,7 +24,6 @@ const Navbar = () => {
   // });
 
   const { logoutMutation } = useLogout();
-  const { totalUnread } = useStreamUnread();
   const queryClient = useQueryClient();
   const { mutate: deleteAccountMutation, isPending: isDeleting } = useMutation({
     mutationFn: deleteAccount,
@@ -53,24 +49,6 @@ const Navbar = () => {
               </Link>
             </div>
           )}
-
-          <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-            <Link to={"/notifications"}>
-              <button className="btn btn-ghost btn-circle relative">
-                <BellIcon className="h-6 w-6 text-base-content opacity-70" />
-                {totalUnread > 0 && (
-                  <span className="badge badge-error badge-xs absolute right-0 top-0 min-w-5">
-                    {totalUnread > 99 ? "99+" : totalUnread}
-                  </span>
-                )}
-              </button>
-            </Link>
-            <Link to="/friend-requests">
-              <button className="btn btn-ghost btn-circle" title="Friend requests">
-                <ClipboardListIcon className="h-6 w-6 text-base-content opacity-70" />
-              </button>
-            </Link>
-          </div>
 
           {/* TODO */}
           <ThemeSelector />
