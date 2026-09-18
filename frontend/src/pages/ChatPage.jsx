@@ -29,11 +29,12 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true);
   const [chatError, setChatError] = useState("");
 
-  const { authUser } = useAuthUser();
+  const { authUser, isLoading: authLoading } = useAuthUser();
 
   const {
     data: tokenData,
     error: tokenError,
+    isPending: tokenLoading,
   } = useQuery({
     queryKey: ["streamToken"],
     queryFn: getStreamToken,
@@ -42,6 +43,8 @@ const ChatPage = () => {
 
   useEffect(() => {
     const initChat = async () => {
+      if (authLoading || (authUser && tokenLoading)) return;
+
       if (!authUser) {
         setChatError("Your session could not be verified. Please log in again.");
         setLoading(false);
@@ -101,15 +104,15 @@ const ChatPage = () => {
     };
 
     initChat();
-  }, [tokenData, tokenError, authUser, targetUserId]);
+  }, [tokenData, tokenError, tokenLoading, authLoading, authUser, targetUserId]);
 
   const handleVideoCall = () => {
-      const { authUser, isLoading: authLoading } = useAuthUser();
+    if (channel) {
       const callUrl = `${window.location.origin}/call/${channel.id}`;
 
       channel.sendMessage({
         text: `I've started a video call. Join me here: ${callUrl}`,
-        isPending: tokenLoading,
+      });
 
       toast.success("Video call link sent successfully!");
     }
@@ -118,7 +121,6 @@ const ChatPage = () => {
   if (loading || !chatClient || !channel) {
     if (chatError) {
       return (
-          if (authLoading || (authUser && tokenLoading)) return;
         <div className="h-screen flex flex-col items-center justify-center p-4 text-center">
           <p className="text-lg font-semibold">Unable to open chat</p>
           <p className="mt-2 opacity-70">{chatError}</p>
