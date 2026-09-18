@@ -1,8 +1,11 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://52.71.153.48:80/api" : "/api";
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  return import.meta.env.DEV ? "http://localhost:443/api" : "/api";
+};
 
 export const axiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: getBaseURL(),
   withCredentials: true, // send cookies with the request
 });

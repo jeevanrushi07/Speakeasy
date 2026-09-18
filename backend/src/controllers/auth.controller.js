@@ -2,6 +2,18 @@ import { upsertStreamUser } from "../lib/stream.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
+const getCookieOptions = (req) => {
+  const isSecureRequest = req.secure || req.headers["x-forwarded-proto"] === "https";
+
+  return {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: isSecureRequest ? "none" : "lax",
+    secure: isSecureRequest,
+    domain: undefined,
+  };
+};
+
 export async function signup(req, res) {
   const { email, password, fullName } = req.body;
 
@@ -51,14 +63,8 @@ export async function signup(req, res) {
     });
 
     console.log("Setting JWT cookie for signup:", token.substring(0, 20) + "...");
-    
-    res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true, // prevent XSS attacks,
-      sameSite: "none", // allow cross-origin requests
-      secure: false, // set to false for HTTP in development
-      domain: undefined, // let browser set the domain
-    });
+
+    res.cookie("jwt", token, getCookieOptions(req));
 
     console.log("Cookie set successfully");
     res.status(201).json({ success: true, user: newUser });
@@ -87,14 +93,8 @@ export async function login(req, res) {
     });
 
     console.log("Setting JWT cookie for login:", token.substring(0, 20) + "...");
-    
-    res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true, // prevent XSS attacks,
-      sameSite: "none", // allow cross-origin requests
-      secure: false, // set to false for HTTP in development
-      domain: undefined, // let browser set the domain
-    });
+
+    res.cookie("jwt", token, getCookieOptions(req));
 
     console.log("Login cookie set successfully");
     res.status(200).json({ success: true, user });
@@ -105,9 +105,10 @@ export async function login(req, res) {
 }
 
 export function logout(req, res) {
+  const cookieOptions = getCookieOptions(req);
   res.clearCookie("jwt", {
-    sameSite: "none",
-    secure: false,
+    sameSite: cookieOptions.sameSite,
+    secure: cookieOptions.secure,
     domain: undefined,
   });
   res.status(200).json({ success: true, message: "Logout successful" });

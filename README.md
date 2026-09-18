@@ -16,20 +16,42 @@ Speakeasy is a fullstack real-time chat and video calling platform designed for 
 
 ---
 
-🧪 **.env Setup**
+🧪 **Environment Variables**
 
-**Backend (`/backend`)**
-```
-PORT=5001
+For local development, create these files:
+
+**Backend (`/backend/.env`)**
+```env
+PORT=443
 MONGO_URI=your_mongo_uri
-STEAM_API_KEY=your_steam_api_key
-STEAM_API_SECRET=your_steam_api_secret
+STEAM_API_KEY=your_stream_api_key
+STEAM_API_SECRET=your_stream_api_secret
 JWT_SECRET_KEY=your_jwt_secret
 NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
 ```
 
-**Frontend (`/frontend`)**
+**Frontend (`/frontend/.env`)**
+```env
+VITE_API_URL=http://localhost:443/api
+VITE_STREAM_API_KEY=your_stream_api_key
 ```
+
+**Render deployment variables**
+Use these exact values in Render for the backend service:
+```env
+PORT=10000
+MONGO_URI=your_mongo_uri
+STEAM_API_KEY=your_stream_api_key
+STEAM_API_SECRET=your_stream_api_secret
+JWT_SECRET_KEY=your_jwt_secret
+NODE_ENV=production
+FRONTEND_URL=https://your-frontend-render-url.onrender.com
+```
+
+Use these in the frontend service:
+```env
+VITE_API_URL=https://your-backend-render-url.onrender.com/api
 VITE_STREAM_API_KEY=your_stream_api_key
 ```
 

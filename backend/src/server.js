@@ -15,10 +15,32 @@ const PORT = process.env.PORT || 443;
 
 const __dirname = path.resolve();
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://192.168.56.1:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:3000",
+  "http://192.168.56.1:443",
+  "http://127.0.0.1:443",
+  "http://localhost:4173",
+  "http://52.71.153.48:3000",
+  "http://52.71.153.48:5173",
+  "http://0.0.0.0:5173",
+  "http://192.168.1.39:5173",
+  "http://172.26.48.1:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.56.1:5173", "http://127.0.0.1:5173", "http://localhost:3000", "http://192.168.56.1:443", "http://127.0.0.1:443", "http://localhost:4173", "http://52.71.153.48:3000", "http://52.71.153.48:5173", "http://0.0.0.0:5173", "http://192.168.1.39:5173", "http://172.26.48.1:5173"],
-    credentials: true, // allow frontend to send cookies
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
   })
 );
 
@@ -28,6 +50,14 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
+
+app.get("/api/test", (req, res) => {
+  res.json({
+    jwtSecretExists: !!process.env.JWT_SECRET_KEY,
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT,
+  });
+});
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
