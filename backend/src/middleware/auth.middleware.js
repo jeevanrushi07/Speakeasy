@@ -3,18 +3,12 @@ import User from "../models/User.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
-    console.log("Cookies received:", req.cookies);
-    console.log("Headers:", req.headers.authorization);
-    console.log("JWT Secret Key exists:", !!process.env.JWT_SECRET_KEY);
-    
     // Try to get token from cookie first, then from Authorization header
     let token = req.cookies.jwt;
     
     if (!token && req.headers.authorization) {
       token = req.headers.authorization.replace('Bearer ', '');
     }
-    
-    console.log("JWT Token found:", !!token);
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized - No token provided" });
@@ -36,7 +30,7 @@ export const protectRoute = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log("Error in protectRoute middleware", error);
+    console.error("Error in protectRoute middleware", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
