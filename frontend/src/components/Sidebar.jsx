@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
-import { BellIcon, HomeIcon, ShipWheelIcon, UsersIcon } from "lucide-react";
+import { BellIcon, ClipboardListIcon, HomeIcon, ShipWheelIcon, UsersIcon } from "lucide-react";
 import { handleAvatarError } from "../lib/utils";
 
 const Sidebar = () => {
@@ -48,6 +48,16 @@ const Sidebar = () => {
         >
           <BellIcon className="size-5 text-base-content opacity-70" />
           <span>Notifications</span>
+        </Link>
+
+        <Link
+          to="/friend-requests"
+          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
+            currentPath === "/friend-requests" ? "btn-active" : ""
+          }`}
+        >
+          <ClipboardListIcon className="size-5 text-base-content opacity-70" />
+          <span>Friend Requests</span>
         </Link>
       </nav>
 

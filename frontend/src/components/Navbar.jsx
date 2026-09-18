@@ -1,6 +1,12 @@
 import { Link, useLocation } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
-import { BellIcon, LogOutIcon, ShipWheelIcon, UserXIcon } from "lucide-react";
+import {
+  BellIcon,
+  ClipboardListIcon,
+  LogOutIcon,
+  ShipWheelIcon,
+  UserXIcon,
+} from "lucide-react";
 import ThemeSelector from "./ThemeSelector";
 import useLogout from "../hooks/useLogout";
 import { handleAvatarError } from "../lib/utils";
@@ -50,6 +56,11 @@ const Navbar = () => {
             <Link to={"/notifications"}>
               <button className="btn btn-ghost btn-circle">
                 <BellIcon className="h-6 w-6 text-base-content opacity-70" />
+              </button>
+            </Link>
+            <Link to="/friend-requests">
+              <button className="btn btn-ghost btn-circle" title="Friend requests">
+                <ClipboardListIcon className="h-6 w-6 text-base-content opacity-70" />
               </button>
             </Link>
           </div>

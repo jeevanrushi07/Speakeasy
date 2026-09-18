@@ -1,27 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { acceptFriendRequest, getFriendRequests } from "../lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { getFriendRequests } from "../lib/api";
 import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
+import { Link } from "react-router";
 import NoNotificationsFound from "../components/NoNotificationsFound";
-import { handleAvatarError } from "../lib/utils";
 
 const NotificationsPage = () => {
-  const queryClient = useQueryClient();
-
   const { data: friendRequests, isLoading } = useQuery({
     queryKey: ["friendRequests"],
     queryFn: getFriendRequests,
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
-  });
-
-  const { mutate: acceptRequestMutation, isPending } = useMutation({
-    mutationFn: acceptFriendRequest,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
-      queryClient.invalidateQueries({ queryKey: ["friends"] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
-    },
   });
 
   const incomingRequests = friendRequests?.incomingReqs || [];
@@ -40,55 +28,21 @@ const NotificationsPage = () => {
           <>
             {incomingRequests.length > 0 && (
               <section className="space-y-4">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <UserCheckIcon className="h-5 w-5 text-primary" />
-                  Friend Requests
-                  <span className="badge badge-primary ml-2">{incomingRequests.length}</span>
-                </h2>
-
-                <div className="space-y-3">
-                  {incomingRequests.map((request) => (
-                    <div
-                      key={request._id}
-                      className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="card-body p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="avatar w-14 h-14 rounded-full bg-base-300">
-                              <img
-                                src={request.sender.profilePic}
-                                alt={request.sender.fullName}
-                                onError={(event) =>
-                                  handleAvatarError(event, request.sender.fullName)
-                                }
-                              />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">{request.sender.fullName}</h3>
-                              <div className="flex flex-wrap gap-1.5 mt-1">
-                                <span className="badge badge-secondary badge-sm">
-                                  Native: {request.sender.nativeLanguage}
-                                </span>
-                                <span className="badge badge-outline badge-sm">
-                                  Learning: {request.sender.learningLanguage}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => acceptRequestMutation(request._id)}
-                            disabled={isPending}
-                          >
-                            Accept
-                          </button>
-                        </div>
-                      </div>
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <UserCheckIcon className="h-5 w-5 text-primary" />
+                    Friend Requests
+                    <span className="badge badge-primary ml-2">{incomingRequests.length}</span>
+                  </h2>
+                  <Link to="/friend-requests" className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="card-body p-4">
+                      <p className="font-semibold">
+                        {incomingRequests.length === 1
+                          ? `${incomingRequests[0].sender.fullName} sent you a friend request`
+                          : `${incomingRequests.length} people sent you friend requests`}
+                      </p>
+                      <p className="text-sm opacity-70">Click to review and respond.</p>
                     </div>
-                  ))}
-                </div>
+                  </Link>
               </section>
             )}
 
