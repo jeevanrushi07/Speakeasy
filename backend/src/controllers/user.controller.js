@@ -11,6 +11,7 @@ export async function getRecommendedUsers(req, res) {
         { _id: { $ne: currentUserId } }, //exclude current user
         { _id: { $nin: currentUser.friends } }, // exclude current user's friends
         { isOnboarded: true },
+        { deletedAt: null },
       ],
     });
     res.status(200).json(recommendedUsers);
@@ -33,6 +34,24 @@ export async function getMyFriends(req, res) {
   }
 }
 
+export async function removeFriend(req, res) {
+  try {
+    const { id: friendId } = req.params;
+    await User.findByIdAndUpdate(req.user.id, { $pull: { friends: friendId } });
+    await User.findByIdAndUpdate(friendId, { $pull: { friends: req.user.id } });
+    await FriendRequest.deleteMany({
+      $or: [
+        { sender: req.user.id, recipient: friendId },
+        { sender: friendId, recipient: req.user.id },
+      ],
+    });
+    res.status(200).json({ message: "Friend removed" });
+  } catch (error) {
+    console.error("Error removing friend", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 export async function sendFriendRequest(req, res) {
   try {
     const myId = req.user.id;
@@ -44,7 +63,7 @@ export async function sendFriendRequest(req, res) {
     }
 
     const recipient = await User.findById(recipientId);
-    if (!recipient) {
+    if (!recipient || recipient.deletedAt) {
       return res.status(404).json({ message: "Recipient not found" });
     }
 

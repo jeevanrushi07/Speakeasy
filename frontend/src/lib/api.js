@@ -22,6 +22,13 @@ export const logout = async () => {
   return response.data;
 };
 
+export const deleteAccount = async () => {
+  const response = await axiosInstance.delete("/auth/account", {
+    withCredentials: true,
+  });
+  return response.data;
+};
+
 export const getAuthUser = async () => {
   const res = await axiosInstance.get("/auth/me", {
     withCredentials: true,
@@ -39,6 +46,13 @@ export const completeOnboarding = async (userData) => {
 // ---------- USERS ----------
 export async function getUserFriends() {
   const response = await axiosInstance.get("/users/friends", {
+    withCredentials: true,
+  });
+  return response.data;
+}
+
+export async function removeFriend(friendId) {
+  const response = await axiosInstance.delete(`/users/friends/${friendId}`, {
     withCredentials: true,
   });
   return response.data;

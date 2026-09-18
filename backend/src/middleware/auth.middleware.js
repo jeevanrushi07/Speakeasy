@@ -26,6 +26,10 @@ export const protectRoute = async (req, res, next) => {
       return res.status(401).json({ message: "Unauthorized - User not found" });
     }
 
+    if (user.deletedAt) {
+      return res.status(401).json({ message: "Account is deleted" });
+    }
+
     req.user = user;
 
     next();

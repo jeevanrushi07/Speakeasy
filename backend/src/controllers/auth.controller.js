@@ -2,6 +2,8 @@ import { upsertStreamUser } from "../lib/stream.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
+const ACCOUNT_RECOVERY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 const getCookieOptions = (req) => {
   const isSecureRequest = req.secure || req.headers["x-forwarded-proto"] === "https";
 
@@ -32,9 +34,19 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "Invalid email format" });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email }).select("+password");
     if (existingUser) {
-      return res.status(400).json({ message: "Email already exists, please use a diffrent one" });
+      if (existingUser.deletedAt && Date.now() - existingUser.deletedAt.getTime() <= ACCOUNT_RECOVERY_WINDOW_MS) {
+        existingUser.deletedAt = null;
+        existingUser.isOnboarded = false;
+        await existingUser.save();
+        return issueAuthCookie(res, req, existingUser, 200, "Account recovered");
+      }
+      if (existingUser.deletedAt) {
+        await User.findByIdAndDelete(existingUser._id);
+      } else {
+        return res.status(400).json({ message: "Email already exists, please use a diffrent one" });
+      }
     }
 
     const randomAvatar = `https://api.dicebear.com/9.x/initials/png?seed=${encodeURIComponent(fullName)}`;
@@ -79,11 +91,22 @@ export async function login(req, res) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) return res.status(401).json({ message: "Invalid email or password" });
 
     const isPasswordCorrect = await user.matchPassword(password);
     if (!isPasswordCorrect) return res.status(401).json({ message: "Invalid email or password" });
+
+    if (user.deletedAt) {
+      if (Date.now() - user.deletedAt.getTime() > ACCOUNT_RECOVERY_WINDOW_MS) {
+        await User.findByIdAndDelete(user._id);
+        return res.status(410).json({ message: "This account was deleted permanently" });
+      }
+
+      user.deletedAt = null;
+      user.isOnboarded = false;
+      await user.save();
+    }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "7d",
@@ -107,6 +130,33 @@ export function logout(req, res) {
     domain: undefined,
   });
   res.status(200).json({ success: true, message: "Logout successful" });
+}
+
+function issueAuthCookie(res, req, user, status, message) {
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "7d",
+  });
+  res.cookie("jwt", token, getCookieOptions(req));
+  return res.status(status).json({ success: true, message, user });
+}
+
+export async function deleteAccount(req, res) {
+  try {
+    await User.findByIdAndUpdate(req.user._id, {
+      deletedAt: new Date(),
+      isOnboarded: false,
+    });
+
+    const cookieOptions = getCookieOptions(req);
+    res.clearCookie("jwt", cookieOptions);
+    res.status(200).json({
+      success: true,
+      message: "Account deleted. You can recover it within 24 hours by logging in again.",
+    });
+  } catch (error) {
+    console.error("Error deleting account", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
 export async function onboard(req, res) {

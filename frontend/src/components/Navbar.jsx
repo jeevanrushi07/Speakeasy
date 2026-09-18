@@ -1,9 +1,12 @@
 import { Link, useLocation } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
-import { BellIcon, LogOutIcon, ShipWheelIcon } from "lucide-react";
+import { BellIcon, LogOutIcon, ShipWheelIcon, UserXIcon } from "lucide-react";
 import ThemeSelector from "./ThemeSelector";
 import useLogout from "../hooks/useLogout";
 import { handleAvatarError } from "../lib/utils";
+import { deleteAccount } from "../lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
   const { authUser } = useAuthUser();
@@ -17,6 +20,15 @@ const Navbar = () => {
   // });
 
   const { logoutMutation } = useLogout();
+  const queryClient = useQueryClient();
+  const { mutate: deleteAccountMutation, isPending: isDeleting } = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
+      queryClient.setQueryData(["authUser"], null);
+      toast.success("Account deleted. Recover it within 24 hours by logging in again.");
+    },
+    onError: (error) => toast.error(error.response?.data?.message || "Could not delete account"),
+  });
 
   return (
     <nav className="bg-base-200 border-b border-base-300 sticky top-0 z-30 h-16 flex items-center">
@@ -57,6 +69,18 @@ const Navbar = () => {
           </div>
 
           {/* Logout button */}
+          <button
+            className="btn btn-ghost btn-circle"
+            title="Delete account"
+            disabled={isDeleting}
+            onClick={() => {
+              if (window.confirm("Delete your account? You can recover it within 24 hours.")) {
+                deleteAccountMutation();
+              }
+            }}
+          >
+            <UserXIcon className="h-6 w-6 text-error opacity-70" />
+          </button>
           <button className="btn btn-ghost btn-circle" onClick={logoutMutation}>
             <LogOutIcon className="h-6 w-6 text-base-content opacity-70" />
           </button>
