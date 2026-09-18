@@ -44,12 +44,18 @@ const Sidebar = () => {
 
         <Link
           to="/notifications"
-          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
+          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case relative ${
             currentPath === "/notifications" ? "btn-active" : ""
           }`}
         >
           <BellIcon className="size-5 text-base-content opacity-70" />
           <span>Notifications</span>
+          {totalUnread > 0 && (
+            <span
+              className="absolute left-8 top-2 size-2 rounded-full bg-success ring-2 ring-base-200"
+              title="New message"
+            />
+          )}
           {totalUnread > 0 && (
             <span className="badge badge-error badge-sm ml-auto">
               {totalUnread > 99 ? "99+" : totalUnread}
