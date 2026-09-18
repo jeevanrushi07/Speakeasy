@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   getOutgoingFriendReqs,
   getRecommendedUsers,
@@ -36,9 +37,22 @@ const HomePage = () => {
 
   const { mutate: sendRequestMutation, isPending } = useMutation({
     mutationFn: sendFriendRequest,
+    onMutate: (recipientId) => {
+      setOutgoingRequestsIds((currentIds) => new Set(currentIds).add(recipientId));
+      return { recipientId };
+    },
     onSuccess: () => {
+      toast.success("Friend request sent");
       queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
       queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
+    },
+    onError: (error, _recipientId, context) => {
+      setOutgoingRequestsIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(context?.recipientId);
+        return nextIds;
+      });
+      toast.error(error.response?.data?.message || "Could not send friend request");
     },
   });
 
