@@ -62,8 +62,6 @@ export async function signup(req, res) {
       expiresIn: "7d",
     });
 
-    console.log("Setting JWT cookie for signup:", token.substring(0, 20) + "...");
-
     res.cookie("jwt", token, getCookieOptions(req));
 
     console.log("Cookie set successfully");
@@ -91,8 +89,6 @@ export async function login(req, res) {
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "7d",
     });
-
-    console.log("Setting JWT cookie for login:", token.substring(0, 20) + "...");
 
     res.cookie("jwt", token, getCookieOptions(req));
 
