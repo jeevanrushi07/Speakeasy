@@ -17,6 +17,7 @@ const Navbar = () => {
   const location = useLocation();
   const isChatPage = location.pathname?.startsWith("/chat");
 
+import { useState } from "react";
   // const queryClient = useQueryClient();
   // const { mutate: logoutMutation } = useMutation({
   //   mutationFn: logout,
@@ -24,6 +25,7 @@ const Navbar = () => {
   // });
 
   const { logoutMutation } = useLogout();
+  const [showProfile, setShowProfile] = useState(false);
   const queryClient = useQueryClient();
   const { mutate: deleteAccountMutation, isPending: isDeleting } = useMutation({
     mutationFn: deleteAccount,
@@ -57,16 +59,21 @@ const Navbar = () => {
             <div className="w-9 rounded-full">
               <img
                 src={authUser?.profilePic}
+          <button
+            type="button"
+            className="avatar cursor-pointer rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+            title="View profile"
+            onClick={() => setShowProfile(true)}
+          >
+            <div className="w-9 rounded-full">
+              <img
+                src={authUser?.profilePic}
                 alt="User Avatar"
                 rel="noreferrer"
                 onError={(event) => handleAvatarError(event, authUser?.fullName)}
               />
             </div>
-          </div>
-
-          {/* Logout button */}
-          <button
-            className="btn btn-ghost btn-circle"
+          </button>
             title="Delete account"
             disabled={isDeleting}
             onClick={() => {
@@ -86,3 +93,42 @@ const Navbar = () => {
   );
 };
 export default Navbar;
+
+      {showProfile && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowProfile(false)}
+        >
+          <section
+            className="card w-full max-w-md bg-base-100 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="card-body items-center text-center">
+              <div className="avatar">
+                <div className="w-24 rounded-full ring ring-primary ring-offset-2 ring-offset-base-100">
+                  <img
+                    src={authUser?.profilePic}
+                    alt={authUser?.fullName || "Profile"}
+                    onError={(event) => handleAvatarError(event, authUser?.fullName)}
+                  />
+                </div>
+              </div>
+              <h2 className="card-title mt-2">{authUser?.fullName}</h2>
+              <p className="text-sm opacity-70">{authUser?.email}</p>
+              <div className="mt-4 w-full space-y-2 text-left">
+                <p><strong>Bio:</strong> {authUser?.bio || "No bio added"}</p>
+                <p><strong>Native language:</strong> {authUser?.nativeLanguage || "Not set"}</p>
+                <p><strong>Learning language:</strong> {authUser?.learningLanguage || "Not set"}</p>
+                <p><strong>Location:</strong> {authUser?.location || "Not set"}</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary mt-5 w-full"
+                onClick={() => setShowProfile(false)}
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
