@@ -3,8 +3,11 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import {
   getOutgoingFriendReqs,
+  getFriendRequests,
   getRecommendedUsers,
   getUserFriends,
+  acceptFriendRequest,
+  declineFriendRequest,
   sendFriendRequest,
 } from "../lib/api";
 import { Link } from "react-router";
@@ -35,6 +38,17 @@ const HomePage = () => {
     refetchInterval: 10000,
   });
 
+  const { data: friendRequests } = useQuery({
+    queryKey: ["friendRequests"],
+    queryFn: getFriendRequests,
+    refetchInterval: 5000,
+  });
+
+  const incomingRequests = friendRequests?.incomingReqs || [];
+  const incomingRequestsBySender = new Map(
+    incomingRequests.map((request) => [request.sender._id, request])
+  );
+
   const { mutate: sendRequestMutation, isPending } = useMutation({
     mutationFn: sendFriendRequest,
     onMutate: (recipientId) => {
@@ -53,6 +67,24 @@ const HomePage = () => {
         return nextIds;
       });
       toast.error(error.response?.data?.message || "Could not send friend request");
+    },
+  });
+
+  const { mutate: acceptRequestMutation, isPending: isAccepting } = useMutation({
+    mutationFn: acceptFriendRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+    },
+  });
+
+  const { mutate: declineRequestMutation, isPending: isDeclining } = useMutation({
+    mutationFn: declineFriendRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 
@@ -114,6 +146,7 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
+                const incomingRequest = incomingRequestsBySender.get(user._id);
 
                 return (
                   <div
@@ -156,14 +189,32 @@ const HomePage = () => {
                       {user.bio && <p className="text-sm opacity-70">{user.bio}</p>}
 
                       {/* Action button */}
-                      <button
-                        className={`btn w-full mt-2 ${
-                          hasRequestBeenSent ? "btn-disabled" : "btn-primary"
-                        } `}
-                        onClick={() => sendRequestMutation(user._id)}
-                        disabled={hasRequestBeenSent || isPending}
-                      >
-                        {hasRequestBeenSent ? (
+                      {incomingRequest ? (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            className="btn btn-primary flex-1"
+                            onClick={() => acceptRequestMutation(incomingRequest._id)}
+                            disabled={isAccepting || isDeclining}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="btn btn-outline flex-1"
+                            onClick={() => declineRequestMutation(incomingRequest._id)}
+                            disabled={isAccepting || isDeclining}
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className={`btn w-full mt-2 ${
+                            hasRequestBeenSent ? "btn-disabled" : "btn-primary"
+                          } `}
+                          onClick={() => sendRequestMutation(user._id)}
+                          disabled={hasRequestBeenSent || isPending}
+                        >
+                          {hasRequestBeenSent ? (
                           <>
                             <CheckCircleIcon className="size-4 mr-2" />
                             Request Sent
@@ -173,8 +224,9 @@ const HomePage = () => {
                             <UserPlusIcon className="size-4 mr-2" />
                             Send Friend Request
                           </>
-                        )}
-                      </button>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
