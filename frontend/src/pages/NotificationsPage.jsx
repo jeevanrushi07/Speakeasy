@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acceptFriendRequest, getFriendRequests } from "../lib/api";
 import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
 import NoNotificationsFound from "../components/NoNotificationsFound";
+import { handleAvatarError } from "../lib/utils";
 
 const NotificationsPage = () => {
   const queryClient = useQueryClient();
@@ -51,7 +52,13 @@ const NotificationsPage = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="avatar w-14 h-14 rounded-full bg-base-300">
-                              <img src={request.sender.profilePic} alt={request.sender.fullName} />
+                              <img
+                                src={request.sender.profilePic}
+                                alt={request.sender.fullName}
+                                onError={(event) =>
+                                  handleAvatarError(event, request.sender.fullName)
+                                }
+                              />
                             </div>
                             <div>
                               <h3 className="font-semibold">{request.sender.fullName}</h3>
@@ -98,6 +105,9 @@ const NotificationsPage = () => {
                             <img
                               src={notification.recipient.profilePic}
                               alt={notification.recipient.fullName}
+                              onError={(event) =>
+                                handleAvatarError(event, notification.recipient.fullName)
+                              }
                             />
                           </div>
                           <div className="flex-1">
