@@ -17,9 +17,11 @@ const PORT = process.env.PORT || 443;
 const currentFile = fileURLToPath(import.meta.url);
 const backendSourceDirectory = path.dirname(currentFile);
 const frontendDistDirectory = path.resolve(backendSourceDirectory, "../../frontend/dist");
+const normalizeOrigin = (origin) => origin?.replace(/\/$/, "");
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  process.env.RENDER_EXTERNAL_URL,
   "http://localhost:5173",
   "http://192.168.56.1:5173",
   "http://127.0.0.1:5173",
@@ -32,12 +34,12 @@ const allowedOrigins = [
   "http://0.0.0.0:5173",
   "http://192.168.1.39:5173",
   "http://172.26.48.1:5173",
-].filter(Boolean);
+].map(normalizeOrigin).filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
         callback(null, true);
         return;
       }
