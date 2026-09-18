@@ -20,6 +20,11 @@ async function getUnreadChannels(authUser, tokenData) {
     );
   }
 
+  const unreadResponse = await client.getUnreadCount(authUser._id);
+  const unreadByChannel = new Map(
+    unreadResponse.channels.map((item) => [item.channel_id, item.unread_count])
+  );
+
   const channels = await client.queryChannels(
     { type: "messaging", members: { $in: [authUser._id] } },
     { last_message_at: -1 },
@@ -28,7 +33,11 @@ async function getUnreadChannels(authUser, tokenData) {
 
   return channels
     .map((channel) => {
-      const unread = channel.countUnread();
+      const unread =
+        unreadByChannel.get(channel.id) ||
+        unreadByChannel.get(`${channel.type}:${channel.id}`) ||
+        channel.state.unreadCount ||
+        0;
       const otherMember = Object.values(channel.state.members || {}).find(
         (member) => member.user_id !== authUser._id
       );
@@ -42,7 +51,7 @@ async function getUnreadChannels(authUser, tokenData) {
         senderId: lastMessage?.user?.id || otherMember?.user_id,
       };
     })
-    .filter((channel) => channel.unread > 0);
+    .filter((channel) => channel.unread > 0 && channel.targetUserId);
 }
 
 const useStreamUnread = () => {
