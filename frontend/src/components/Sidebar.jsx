@@ -2,11 +2,13 @@ import { Link, useLocation } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
 import { BellIcon, ClipboardListIcon, HomeIcon, ShipWheelIcon, UsersIcon } from "lucide-react";
 import { handleAvatarError } from "../lib/utils";
+import useStreamUnread from "../hooks/useStreamUnread";
 
 const Sidebar = () => {
   const { authUser } = useAuthUser();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { totalUnread } = useStreamUnread();
 
   return (
     <aside className="w-64 bg-base-200 border-r border-base-300 hidden lg:flex flex-col h-screen sticky top-0">
@@ -48,6 +50,11 @@ const Sidebar = () => {
         >
           <BellIcon className="size-5 text-base-content opacity-70" />
           <span>Notifications</span>
+          {totalUnread > 0 && (
+            <span className="badge badge-error badge-sm ml-auto">
+              {totalUnread > 99 ? "99+" : totalUnread}
+            </span>
+          )}
         </Link>
 
         <Link

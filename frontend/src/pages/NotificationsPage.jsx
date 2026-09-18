@@ -3,6 +3,8 @@ import { getFriendRequests } from "../lib/api";
 import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
 import { Link } from "react-router";
 import NoNotificationsFound from "../components/NoNotificationsFound";
+import { handleAvatarError } from "../lib/utils";
+import useStreamUnread from "../hooks/useStreamUnread";
 
 const NotificationsPage = () => {
   const { data: friendRequests, isLoading } = useQuery({
@@ -14,6 +16,7 @@ const NotificationsPage = () => {
 
   const incomingRequests = friendRequests?.incomingReqs || [];
   const acceptedRequests = friendRequests?.acceptedReqs || [];
+  const { channels: unreadChannels, totalUnread } = useStreamUnread();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -43,6 +46,33 @@ const NotificationsPage = () => {
                       <p className="text-sm opacity-70">Click to review and respond.</p>
                     </div>
                   </Link>
+              </section>
+            )}
+
+            {unreadChannels.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <MessageSquareIcon className="h-5 w-5 text-primary" />
+                  New Messages
+                  <span className="badge badge-primary ml-2">{totalUnread}</span>
+                </h2>
+                <div className="space-y-3">
+                  {unreadChannels.map((channel) => (
+                    <Link
+                      key={channel.id}
+                      to={`/chat/${channel.targetUserId}`}
+                      className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="card-body p-4 flex-row items-center justify-between">
+                        <div>
+                          <p className="font-semibold">New message from {channel.senderName}</p>
+                          <p className="text-sm opacity-70">Click to open the conversation.</p>
+                        </div>
+                        <span className="badge badge-primary">{channel.unread}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </section>
             )}
 
@@ -90,7 +120,9 @@ const NotificationsPage = () => {
               </section>
             )}
 
-            {incomingRequests.length === 0 && acceptedRequests.length === 0 && (
+            {incomingRequests.length === 0 &&
+              acceptedRequests.length === 0 &&
+              unreadChannels.length === 0 && (
               <NoNotificationsFound />
             )}
           </>
